@@ -97,6 +97,68 @@ Route URL creation is done from a route pattern and parameter set:
 - `inventor96\InertiaOffline\Contracts\PaginationUrlExpanderInterface`
   - `expand(string $baseUrl, mixed $pagination, mixed $route, OfflineCacheable $attribute, array $routeParams = []): array`
 
+## Built-in Implementations
+
+### `QueryPaginationUrlExpander`
+
+A ready-to-use implementation of `PaginationUrlExpanderInterface` that generates paginated URLs by appending a configurable query parameter (e.g. `?page=2`) to the base URL.
+
+```php
+<?php
+
+use inventor96\InertiaOffline\Pagination\QueryPaginationUrlExpander;
+
+$expander = new QueryPaginationUrlExpander(pageKey: 'page');
+```
+
+It resolves page count from the value returned by `pagination_resolver` in three ways:
+
+| Resolver return type | Resolution strategy |
+|---|---|
+| `int` | Used directly as the page count. |
+| Object with `numberOfPages()` method | Calls `numberOfPages()` and casts to int. |
+| Array with `'pages'` key | Reads `$pagination['pages']` and casts to int. |
+
+Given a base URL and a resolved page count `n`, it produces URLs for pages 1 through `n`.
+
+**Usage in an adapter**
+
+This expander is intentionally framework-agnostic, so it can serve as the default in any adapter. It's recommended that adapters accept an optional `PaginationUrlExpanderInterface` argument and fall back to `QueryPaginationUrlExpander` when none is provided, allowing projects to inject their own expander:
+
+```php
+<?php
+
+use inventor96\InertiaOffline\AbstractOfflineRouteList;
+use inventor96\InertiaOffline\Contracts\PaginationUrlExpanderInterface;
+use inventor96\InertiaOffline\OfflineCacheable;
+use inventor96\InertiaOffline\Pagination\QueryPaginationUrlExpander;
+
+final class OfflineRoutes extends AbstractOfflineRouteList
+{
+    public function __construct(
+        // ...
+        private readonly ?PaginationUrlExpanderInterface $paginationUrlExpander = null,
+    ) {}
+
+    protected function expandPaginationUrls(
+        string $baseUrl,
+        mixed $pagination,
+        mixed $route,
+        OfflineCacheable $attribute,
+        array $routeParams = [],
+    ): array {
+        $expander = $this->paginationUrlExpander ?? new QueryPaginationUrlExpander();
+        return $expander->expand($baseUrl, $pagination, $route, $attribute, $routeParams);
+    }
+
+    // ...
+}
+```
+
+This pattern lets the adapter provide a sensible default while giving individual projects the flexibility to substitute a custom expander for pagination schemes that use path segments, cursor tokens, or other non-standard formats.
+
+If your framework has a DI container, you can also consider making the expander a dependency of the adapter and letting projects bind their preferred implementation in the container.
+
 ## Building a Framework Adapter
 
 To implement this package for your framework, create a class extending `AbstractOfflineRouteList` and implement the abstract methods.
@@ -164,6 +226,8 @@ final class OfflineRoutes extends AbstractOfflineRouteList
 
 3. Pagination normalization
    - Treat pagination resolver output as adapter-specific and convert to URLs via one expander implementation.
+   - Feel free to use `QueryPaginationUrlExpander` as the default inside `expandPaginationUrls()` if it covers the common case for your framework.
+   - Accept an optional `PaginationUrlExpanderInterface` in your adapter constructor so projects can supply a custom expander for non-standard pagination (path-segment pages, cursor tokens, etc.).
 
 4. Observability
    - Implement `logWarning()` so unsupported actions or malformed generators are visible in logs.
