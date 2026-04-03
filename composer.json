@@ -1,6 +1,5 @@
 {
   "name": "inventor96/inertia-offline",
-  "version": "0.1.0",
   "description": "Framework-agnostic backend primitives for Inertia offline support.",
   "keywords": ["inertia", "offline", "service worker", "precaching", "php"],
   "type": "library",
