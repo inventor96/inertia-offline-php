@@ -235,6 +235,9 @@ final class OfflineRoutes extends AbstractOfflineRouteList
 5. Deterministic output
    - Keep route generation deterministic for the same user/context to improve cache behavior and debugging.
 
+6. ETag support (optional)
+   - The frontend library supports the use of ETags and `If-None-Match` headers for caching the route list and inertia requests. If your framework does not have built-in support for ETags, consider implementing a simple ETag middleware that projects can use.
+
 ## Example: Dynamic Route + Pagination
 
 ```php
