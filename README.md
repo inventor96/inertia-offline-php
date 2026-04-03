@@ -2,6 +2,8 @@
 
 Framework-agnostic backend primitives for discovering which Inertia routes should be available offline.
 
+> Beta: offline read-only layer for Inertia.js apps, focused on safe cached content and navigation fallback.
+
 This package is intentionally small: it provides the core algorithm and extension points, while each framework (Laravel, Mako, Symfony, Slim, etc.) supplies route inspection, action invocation, and pagination URL expansion.
 
 This PHP backend package is designed to work with [`inertia-offline`](https://github.com/inventor96/inertia-offline-js) (the JS/TS frontend service worker library). Both the frontend and the backend aspects are required for an Inertia.js app.
